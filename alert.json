@@ -1,0 +1,16 @@
+{
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "TestAlert",
+        "severity": "critical"
+      },
+      "annotations": {
+        "description": "This is a test alert"
+      },
+      "startsAt": "2024-09-01T00:00:00Z",
+      "endsAt": "2024-09-01T01:00:00Z"
+    }
+  ]
+}
