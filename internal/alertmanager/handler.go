@@ -5,8 +5,8 @@ import (
     "fmt"
     "log"
     "net/http"
-    "snsalert/internal/aws"
-    "snsalert/config"
+    "github.com/maks3201/sns-alert-service/config"
+    "github.com/maks3201/sns-alert-service/internal/aws"
     "strings"
 )
 

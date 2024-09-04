@@ -4,16 +4,17 @@ import (
     "context"
     "fmt"
     "log"
-    "snsalert/config"
-    "github.com/aws/aws-sdk-go-v2/config"
+
+    awsconfig "github.com/aws/aws-sdk-go-v2/config"  // Alias the AWS SDK config package to avoid conflicts
     "github.com/aws/aws-sdk-go-v2/service/sns"
+    "github.com/maks3201/sns-alert-service/config"   // This is your own config package
 )
 
 var snsClient *sns.Client
 
 // InitSNSClient initializes the AWS SNS client
 func InitSNSClient(cfg config.Config) error {
-    awsCfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(cfg.AWSRegion))
+    awsCfg, err := awsconfig.LoadDefaultConfig(context.TODO(), awsconfig.WithRegion(cfg.AWSRegion)) // Use the aliased package here
     if err != nil {
         return fmt.Errorf("failed to load AWS configuration: %v", err)
     }

@@ -12,3 +12,4 @@ func TestPublishToSNS(t *testing.T) {
         t.Fatalf("Expected no error, got %v", err)
     }
 }
+	

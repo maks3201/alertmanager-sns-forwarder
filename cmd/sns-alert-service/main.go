@@ -3,7 +3,6 @@ package main
 import (
     "log"
     "net/http"
-    "os"
     "github.com/maks3201/sns-alert-service/config"
     "github.com/maks3201/sns-alert-service/internal/alertmanager"
     "github.com/maks3201/sns-alert-service/internal/aws"

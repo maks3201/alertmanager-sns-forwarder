@@ -1,4 +1,4 @@
-module sns
+module github.com/maks3201/sns-alert-service
 
 go 1.22.1
 
