@@ -13,7 +13,6 @@
 
 - `AWS_ACCESS_KEY_ID`: Your AWS access key.
 - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key.
-- `AWS_ACCOUNT_ID`: Your AWS account ID.
 - `AWS_REGION`: The AWS region where SNS is hosted.
 - `SNS_TOPIC_ARN`: The ARN of the SNS topic to forward alerts.
 
@@ -22,7 +21,6 @@
 ```bash
 docker run -e AWS_ACCESS_KEY_ID=your_access_key \
            -e AWS_SECRET_ACCESS_KEY=your_secret_key \
-           -e AWS_ACCOUNT_ID=your_account_id \
            -e AWS_REGION=your_region \
            -e SNS_TOPIC_ARN=your_topic_arn \
            -p 80:80 sns-alert-forwarder
