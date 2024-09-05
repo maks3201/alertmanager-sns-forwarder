@@ -5,6 +5,7 @@ import (
     "net/http"
     "github.com/maks3201/sns-alert-service/config"
     "github.com/maks3201/sns-alert-service/internal/alertmanager"
+    "github.com/maks3201/sns-alert-service/internal/health"
     "github.com/maks3201/sns-alert-service/internal/aws"
 )
 
@@ -19,6 +20,7 @@ func main() {
     }
 
     // Define HTTP route and handler
+    http.HandleFunc("/healthz", health.HealthHandler) 
     http.HandleFunc("/alert", alertmanager.SNSHandler)
 
     // Start HTTP server
