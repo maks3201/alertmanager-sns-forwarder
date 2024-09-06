@@ -29,6 +29,6 @@ docker run -e AWS_ACCESS_KEY_ID=your_access_key \
            -e AWS_SECRET_ACCESS_KEY=your_secret_key \
            -e AWS_REGION=your_region \
            -e SNS_TOPIC_ARN=your_topic_arn \
-           -e ALERT_START_TIME=08:00
-           -e ALERT_END_TIME=18:00
+           -e ALERT_START_TIME=08:00 \
+           -e ALERT_END_TIME=18:00 \
            -p 80:80 sns-alert-forwarder
