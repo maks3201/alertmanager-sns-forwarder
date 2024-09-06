@@ -8,3 +8,5 @@ sns_topics:
     arn: "arn:aws:sns:us-east-1:123456789012:TopicB"
     start_time: "02:00"
     end_time: "10:00"
+alertnames:
+  - "AlertName"

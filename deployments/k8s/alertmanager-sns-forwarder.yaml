@@ -1,4 +1,25 @@
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: ops
+  name: alertmanager-sns-forwarder-config
+data:
+  alertmanager-sns-forwarder-config: |
+    aws_region: "eu-central-1"
+    sns_topics:
+      - name: "TopicA"
+        arn: "arn:aws:sns:us-east-1:123456789012:TopicA"
+        start_time: "22:00"
+        end_time: "16:00"
+      - name: "TopicB"
+        arn: "arn:aws:sns:us-east-1:123456789012:TopicB"
+        start_time: "22:00"
+        end_time: "16:00"
+    alertnames:
+      - "AlertName"
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,16 +44,14 @@ spec:
       annotations:
         iam.amazonaws.com/role: sns-forwarder-role
     spec:
-      restartPolicy: Always
       containers:
         - name: alertmanager-sns-forwarder
-          image: maks3201/alertmanager-sns-forwarder:0.0.4
-          imagePullPolicy: Always
+          image: maks3201/alertmanager-sns-forwarder:0.0.7
+          volumeMounts:
+          - name: config
+            mountPath: "/config"
+            readOnly: true
           env:
-            - name: AWS_REGION
-              value: ""
-            - name: SNS_TOPIC_ARN
-              value: ""
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -43,12 +62,6 @@ spec:
                 secretKeyRef:
                   name: alertmanager-sns-forwarder-secret
                   key: aws_secret_access_key
-            - name: AWS_ACCOUNT_ID
-              value: "517455315985"
-            - name: ALERT_START_TIME
-              value: "00:00"
-            - name: ALERT_END_TIME
-              value: "23:59"
           resources:
             requests:
               memory: "32Mi"
@@ -56,6 +69,22 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "500m"
+          ports:
+            - containerPort: 80
+              name: webhook-port
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: webhook-port
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+      volumes:
+      - name: config
+        configMap:
+          name: alertmanager-sns-forwarder-config
+          items:
+          - key: "alertmanager-sns-forwarder-config"
+            path: "config.yaml"
 ---
 apiVersion: v1
 kind: Service
@@ -72,3 +101,4 @@ spec:
       port: 80
       targetPort: 80
   type: ClusterIP
+---

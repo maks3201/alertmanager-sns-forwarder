@@ -37,6 +37,8 @@ type Alert struct {
 func SNSHandler(w http.ResponseWriter, r *http.Request) {
     cfg := config.LoadConfig()
 
+    log.Printf("Loaded global alertnames: %v", cfg.AlertNames)
+
     currentTime := time.Now().Format("15:04")
 
     bodyBytes, err := io.ReadAll(r.Body)
@@ -64,18 +66,31 @@ func SNSHandler(w http.ResponseWriter, r *http.Request) {
                 return
             }
 
-            message := formatAlertMessage(payload)
+            for _, alert := range payload.Alerts {
+                alertname := alert.Labels["alertname"]
+                log.Printf("Received alertname: %s", alertname)
+                log.Printf("Allowed alertnames: %v", cfg.AlertNames)
 
-            if err := aws.PublishToSNS(topic.ARN, message); err != nil {
-                log.Printf("Error sending message to SNS: %v", err)
-                http.Error(w, fmt.Sprintf("Failed to send message to SNS: %v", err), http.StatusInternalServerError)
+                if isAlertFiltered(alertname, cfg.AlertNames) {
+                    log.Printf("Alertname %s is allowed", alertname)
+                    message := formatAlertMessage(payload)
+
+                    if err := aws.PublishToSNS(topic.ARN, message); err != nil {
+                        log.Printf("Error sending message to SNS: %v", err)
+                        http.Error(w, fmt.Sprintf("Failed to send message to SNS: %v", err), http.StatusInternalServerError)
+                        continue
+                    }
+
+                    log.Printf("Alert sent to SNS topic: %s", topic.ARN)
+                } else {
+                    log.Printf("Alertname %s is filtered and will not be sent", alertname)
+                }
             }
-
-            log.Printf("Alert sent to SNS topic: %s", topic.ARN)
         } else {
             log.Printf("Topic %s is not available at this time.", topic.Name)
         }
     }
+
     fmt.Fprintf(w, "Alerts sent to all available topics")
 }
 
@@ -107,4 +122,16 @@ func formatAlertMessage(payload AlertmanagerPayload) string {
         fmt.Fprintf(&message, "\n")
     }
     return message.String()
+}
+
+func isAlertFiltered(alertname string, allowedAlertNames []string) bool {
+    if len(allowedAlertNames) == 0 {
+        return true
+    }
+    for _, allowedAlert := range allowedAlertNames {
+        if allowedAlert == alertname {
+            return true
+        }
+    }
+    return false
 }
