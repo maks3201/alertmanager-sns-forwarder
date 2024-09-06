@@ -5,6 +5,7 @@ import (
     "fmt"
     "log"
     "net/http"
+    "time"
     "strings"
     "github.com/maks3201/sns-alert-service/config"
     "github.com/maks3201/sns-alert-service/internal/aws"
@@ -34,6 +35,19 @@ type Alert struct {
 func SNSHandler(w http.ResponseWriter, r *http.Request) {
     cfg := config.LoadConfig()
 
+    currentTime := time.Now()
+
+    startTimeToday := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), cfg.AllowedStartTime.Hour(), cfg.AllowedStartTime.Minute(), 0, 0, currentTime.Location())
+    endTimeToday := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), cfg.AllowedEndTime.Hour(), cfg.AllowedEndTime.Minute(), 0, 0, currentTime.Location())
+
+    log.Printf("Current time: %v, Start time: %v, End time: %v", currentTime, startTimeToday, endTimeToday)
+
+    if currentTime.Before(startTimeToday) || currentTime.After(endTimeToday) {
+        log.Printf("Current time %v is outside the allowed alert window (%v - %v)", currentTime, cfg.AllowedStartTime, cfg.AllowedEndTime)
+        http.Error(w, "Alerts are not allowed to be sent at this time", http.StatusForbidden)
+        return
+    }
+
     var payload AlertmanagerPayload
     if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
         http.Error(w, "Failed to parse request body", http.StatusBadRequest)
@@ -52,6 +66,7 @@ func SNSHandler(w http.ResponseWriter, r *http.Request) {
     log.Printf("Alert sent to SNS topic: %s", cfg.SNSTopicARN)
     fmt.Fprintf(w, "Alert sent to SNS topic: %s", cfg.SNSTopicARN)
 }
+
 
 func formatAlertMessage(payload AlertmanagerPayload) string {
     var message strings.Builder
