@@ -6,6 +6,8 @@ import (
     "log"
     "net/http"
     "time"
+    "bytes"
+    "io"
     "strings"
     "github.com/maks3201/sns-alert-service/config"
     "github.com/maks3201/sns-alert-service/internal/aws"
@@ -37,15 +39,26 @@ func SNSHandler(w http.ResponseWriter, r *http.Request) {
 
     currentTime := time.Now().Format("15:04")
 
+    bodyBytes, err := io.ReadAll(r.Body)
+    if err != nil {
+        http.Error(w, "Failed to read request body", http.StatusBadRequest)
+        log.Printf("Error reading request body: %v", err)
+        return
+    }
+    defer r.Body.Close()
+
     for _, topic := range cfg.Topics {
         startTime := config.ParseTime("15:04", topic.StartTime)
         endTime := config.ParseTime("15:04", topic.EndTime)
         currentTimeParsed := config.ParseTime("15:04", currentTime)
 
         if isTopicAvailable(startTime, endTime, currentTimeParsed) {
-            log.Printf("Topic %s is available. Sending alert...", topic.Name)
+            log.Printf("Topic %s is available. Sending alert to ARN: %s", topic.Name, topic.ARN)
+
+            bodyReader := io.NopCloser(bytes.NewBuffer(bodyBytes))
+
             var payload AlertmanagerPayload
-            if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+            if err := json.NewDecoder(bodyReader).Decode(&payload); err != nil {
                 http.Error(w, "Failed to parse request body", http.StatusBadRequest)
                 log.Printf("Error parsing request: %v", err)
                 return
@@ -53,20 +66,17 @@ func SNSHandler(w http.ResponseWriter, r *http.Request) {
 
             message := formatAlertMessage(payload)
 
-            log.Printf("Sending message to SNS topic ARN: %s", topic.ARN)
-
             if err := aws.PublishToSNS(topic.ARN, message); err != nil {
-                http.Error(w, fmt.Sprintf("Failed to send message to SNS: %v", err), http.StatusInternalServerError)
                 log.Printf("Error sending message to SNS: %v", err)
-                return
+                http.Error(w, fmt.Sprintf("Failed to send message to SNS: %v", err), http.StatusInternalServerError)
             }
 
             log.Printf("Alert sent to SNS topic: %s", topic.ARN)
-            fmt.Fprintf(w, "Alert sent to SNS topic: %s", topic.ARN)
         } else {
             log.Printf("Topic %s is not available at this time.", topic.Name)
         }
     }
+    fmt.Fprintf(w, "Alerts sent to all available topics")
 }
 
 func isTopicAvailable(startTime, endTime, currentTime time.Time) bool {

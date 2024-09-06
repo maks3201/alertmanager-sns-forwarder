@@ -1,7 +1,10 @@
----
-aws_region: "region"
+aws_region: "us-east-1"
 sns_topics:
-  - name: "name"
-    arn: "arn:aws:sns:region:id:name"
+  - name: "TopicA"
+    arn: "arn:aws:sns:us-east-1:123456789012:TopicA"
     start_time: "22:00"
-    end_time: "16:00"
+    end_time: "06:00"
+  - name: "TopicB"
+    arn: "arn:aws:sns:us-east-1:123456789012:TopicB"
+    start_time: "02:00"
+    end_time: "10:00"
