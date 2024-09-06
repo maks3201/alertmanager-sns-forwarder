@@ -20,6 +20,8 @@ docker build -f docker/Dockerfile -t sns-alert-forwarder .
 
 ### Usage
 
+Modify config/config.yaml file.
+
 ```bash
 docker run -e AWS_ACCESS_KEY_ID=your_access_key \
            -e AWS_SECRET_ACCESS_KEY=your_secret_key \
