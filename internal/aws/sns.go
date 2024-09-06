@@ -12,14 +12,30 @@ import (
 
 var snsClient *sns.Client
 
-// InitSNSClient initializes the AWS SNS client
+// InitSNSClient initializes the AWS SNS client and verifies credentials
 func InitSNSClient(cfg config.Config) error {
     awsCfg, err := awsconfig.LoadDefaultConfig(context.TODO(), awsconfig.WithRegion(cfg.AWSRegion))
     if err != nil {
         return fmt.Errorf("failed to load AWS configuration: %v", err)
     }
+
     snsClient = sns.NewFromConfig(awsCfg)
-    log.Printf("Connected to AWS region: %s", awsCfg.Region)
+
+    if err := verifySNSClient(); err != nil {
+        return fmt.Errorf("failed to verify SNS client: %v", err)
+    }
+
+    return nil
+}
+
+// verifySNSClient checks if the SNS client is working by listing topics
+func verifySNSClient() error {
+    input := &sns.ListTopicsInput{}
+    _, err := snsClient.ListTopics(context.TODO(), input)
+    if err != nil {
+        return fmt.Errorf("error verifying SNS client: %v", err)
+    }
+    log.Println("AWS SNS client successfully verified.")
     return nil
 }
 

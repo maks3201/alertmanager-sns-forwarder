@@ -31,4 +31,11 @@ docker run -e AWS_ACCESS_KEY_ID=your_access_key \
            -e SNS_TOPIC_ARN=your_topic_arn \
            -e ALERT_START_TIME=08:00 \
            -e ALERT_END_TIME=18:00 \
-           -p 80:80 sns-alert-forwarder
+           -p 8080:80 sns-alert-forwarder
+```
+
+### Tests
+```
+curl -X POST 127.1:8080/alert      -H "Content-Type: application/json" \
+     -d @tests/alert.json
+```
