@@ -12,10 +12,6 @@
 
 - `AWS_ACCESS_KEY_ID`: Your AWS access key.
 - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key.
-- `AWS_REGION`: The AWS region where SNS is hosted.
-- `SNS_TOPIC_ARN`: The ARN of the SNS topic to forward alerts.
-- `ALERT_START_TIME`
-- `ALERT_END_TIME`
 
 ### Compile
 ```
@@ -27,10 +23,7 @@ docker build -f docker/Dockerfile -t sns-alert-forwarder .
 ```bash
 docker run -e AWS_ACCESS_KEY_ID=your_access_key \
            -e AWS_SECRET_ACCESS_KEY=your_secret_key \
-           -e AWS_REGION=your_region \
-           -e SNS_TOPIC_ARN=your_topic_arn \
-           -e ALERT_START_TIME=08:00 \
-           -e ALERT_END_TIME=18:00 \
+           -v $(pwd)/config/config.yaml:/config/config.yaml\
            -p 8080:80 sns-alert-forwarder
 ```
 

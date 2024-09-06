@@ -35,38 +35,46 @@ type Alert struct {
 func SNSHandler(w http.ResponseWriter, r *http.Request) {
     cfg := config.LoadConfig()
 
-    currentTime := time.Now()
+    currentTime := time.Now().Format("15:04")
 
-    startTimeToday := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), cfg.AllowedStartTime.Hour(), cfg.AllowedStartTime.Minute(), 0, 0, currentTime.Location())
-    endTimeToday := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), cfg.AllowedEndTime.Hour(), cfg.AllowedEndTime.Minute(), 0, 0, currentTime.Location())
+    for _, topic := range cfg.Topics {
+        startTime := config.ParseTime("15:04", topic.StartTime)
+        endTime := config.ParseTime("15:04", topic.EndTime)
+        currentTimeParsed := config.ParseTime("15:04", currentTime)
 
-    log.Printf("Current time: %v, Start time: %v, End time: %v", currentTime, startTimeToday, endTimeToday)
+        if isTopicAvailable(startTime, endTime, currentTimeParsed) {
+            log.Printf("Topic %s is available. Sending alert...", topic.Name)
+            var payload AlertmanagerPayload
+            if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+                http.Error(w, "Failed to parse request body", http.StatusBadRequest)
+                log.Printf("Error parsing request: %v", err)
+                return
+            }
 
-    if currentTime.Before(startTimeToday) || currentTime.After(endTimeToday) {
-        log.Printf("Current time %v is outside the allowed alert window (%v - %v)", currentTime, cfg.AllowedStartTime, cfg.AllowedEndTime)
-        http.Error(w, "Alerts are not allowed to be sent at this time", http.StatusForbidden)
-        return
+            message := formatAlertMessage(payload)
+
+            log.Printf("Sending message to SNS topic ARN: %s", topic.ARN)
+
+            if err := aws.PublishToSNS(topic.ARN, message); err != nil {
+                http.Error(w, fmt.Sprintf("Failed to send message to SNS: %v", err), http.StatusInternalServerError)
+                log.Printf("Error sending message to SNS: %v", err)
+                return
+            }
+
+            log.Printf("Alert sent to SNS topic: %s", topic.ARN)
+            fmt.Fprintf(w, "Alert sent to SNS topic: %s", topic.ARN)
+        } else {
+            log.Printf("Topic %s is not available at this time.", topic.Name)
+        }
     }
-
-    var payload AlertmanagerPayload
-    if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-        http.Error(w, "Failed to parse request body", http.StatusBadRequest)
-        log.Printf("Error parsing request: %v", err)
-        return
-    }
-
-    message := formatAlertMessage(payload)
-
-    if err := aws.PublishToSNS(cfg.SNSTopicARN, message); err != nil {
-        http.Error(w, fmt.Sprintf("Failed to send message to SNS: %v", err), http.StatusInternalServerError)
-        log.Printf("Error sending message to SNS: %v", err)
-        return
-    }
-
-    log.Printf("Alert sent to SNS topic: %s", cfg.SNSTopicARN)
-    fmt.Fprintf(w, "Alert sent to SNS topic: %s", cfg.SNSTopicARN)
 }
 
+func isTopicAvailable(startTime, endTime, currentTime time.Time) bool {
+    if startTime.Before(endTime) {
+        return currentTime.After(startTime) && currentTime.Before(endTime)
+    }
+    return currentTime.After(startTime) || currentTime.Before(endTime)
+}
 
 func formatAlertMessage(payload AlertmanagerPayload) string {
     var message strings.Builder

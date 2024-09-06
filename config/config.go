@@ -1,46 +1,47 @@
 package config
 
 import (
-	"log"
-	"os"
-	"time"
+    "io/ioutil"
+    "log"
+    "gopkg.in/yaml.v2"
+    "time"
 )
 
+type SNSTopicConfig struct {
+    Name      string `yaml:"name"`
+    ARN       string `yaml:"arn"`
+    StartTime string `yaml:"start_time"`
+    EndTime   string `yaml:"end_time"`
+}
+
 type Config struct {
-	AWSRegion        string
-	SNSTopicARN      string
-	AllowedStartTime time.Time
-	AllowedEndTime   time.Time
+    AWSRegion string          `yaml:"aws_region"`
+    Topics    []SNSTopicConfig `yaml:"sns_topics"`
 }
 
 func LoadConfig() Config {
-	requiredVars := []string{"AWS_REGION", "SNS_TOPIC_ARN", "ALERT_START_TIME", "ALERT_END_TIME"}
-	envVars := make(map[string]string)
+    file, err := ioutil.ReadFile("config/config.yaml")
+    if err != nil {
+        log.Fatalf("Failed to read config file: %v", err)
+    }
 
-	for _, key := range requiredVars {
-		value, exists := os.LookupEnv(key)
-		if !exists || value == "" {
-			log.Fatalf("Missing required environment variable: %s", key)
-		}
-		envVars[key] = value
-	}
+    var cfg Config
+    err = yaml.Unmarshal(file, &cfg)
+    if err != nil {
+        log.Fatalf("Failed to parse config file: %v", err)
+    }
 
-	layout := "15:04"
+    if cfg.AWSRegion == "" || len(cfg.Topics) == 0 {
+        log.Fatal("Missing required fields in config file")
+    }
 
-	startTime, err := time.Parse(layout, envVars["ALERT_START_TIME"])
-	if err != nil {
-		log.Fatalf("Error parsing ALERT_START_TIME: %v", err)
-	}
+    return cfg
+}
 
-	endTime, err := time.Parse(layout, envVars["ALERT_END_TIME"])
-	if err != nil {
-		log.Fatalf("Error parsing ALERT_END_TIME: %v", err)
-	}
-
-	return Config{
-		AWSRegion:        envVars["AWS_REGION"],
-		SNSTopicARN:      envVars["SNS_TOPIC_ARN"],
-		AllowedStartTime: startTime,
-		AllowedEndTime:   endTime,
-	}
+func ParseTime(layout, timeStr string) time.Time {
+    parsedTime, err := time.Parse(layout, timeStr)
+    if err != nil {
+        log.Fatalf("Error parsing time: %v", err)
+    }
+    return parsedTime
 }

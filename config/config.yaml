@@ -1,0 +1,7 @@
+---
+aws_region: "region"
+sns_topics:
+  - name: "name"
+    arn: "arn:aws:sns:region:id:name"
+    start_time: "22:00"
+    end_time: "16:00"
