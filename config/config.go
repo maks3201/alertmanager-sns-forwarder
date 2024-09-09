@@ -12,7 +12,6 @@ type SNSTopicConfig struct {
     ARN         string   `yaml:"arn"`
     StartTime   string   `yaml:"start_time"`
     EndTime     string   `yaml:"end_time"`
-    AlertNames  []string `yaml:"alertnames"`
 }
 
 type Config struct {
