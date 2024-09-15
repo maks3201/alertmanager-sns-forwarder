@@ -45,7 +45,7 @@ func SNSHandler(w http.ResponseWriter, r *http.Request) {
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
-		log.Infof("Error reading request body: %v", err)
+		log.Fatalf("Error reading request body: %v", err)
 		return
 	}
 	defer r.Body.Close()
@@ -63,7 +63,7 @@ func SNSHandler(w http.ResponseWriter, r *http.Request) {
 			var payload AlertmanagerPayload
 			if err := json.NewDecoder(bodyReader).Decode(&payload); err != nil {
 				http.Error(w, "Failed to parse request body", http.StatusBadRequest)
-				log.Infof("Error parsing request: %v", err)
+				log.Fatalf("Error parsing request: %v", err)
 				return
 			}
 
@@ -77,7 +77,7 @@ func SNSHandler(w http.ResponseWriter, r *http.Request) {
 					message := formatAlertMessage(payload)
 
 					if err := aws.PublishToSNS(topic.ARN, message); err != nil {
-						log.Infof("Error sending message to SNS: %v", err)
+						log.Fatalf("Error sending message to SNS: %v", err)
 						http.Error(w, fmt.Sprintf("Failed to send message to SNS: %v", err), http.StatusInternalServerError)
 						continue
 					}

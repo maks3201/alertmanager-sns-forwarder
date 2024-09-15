@@ -8,7 +8,6 @@ import (
 )
 
 func ReadyHandler(w http.ResponseWriter, r *http.Request) {
-	// Проверяем соединение с AWS SNS
 	if err := aws.CheckSNSConnection(); err != nil {
 		log.Errorf("AWS SNS connection check failed: %v", err)
 		http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
