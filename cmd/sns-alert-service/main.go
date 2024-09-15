@@ -1,31 +1,55 @@
 package main
 
 import (
-    "log"
-    "net/http"
-    "github.com/maks3201/sns-alert-service/config"
-    "github.com/maks3201/sns-alert-service/internal/alertmanager"
-    "github.com/maks3201/sns-alert-service/internal/health"
-    "github.com/maks3201/sns-alert-service/internal/aws"
+	"context"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/maks3201/sns-alert-service/config"
+	"github.com/maks3201/sns-alert-service/internal/alertmanager"
+	"github.com/maks3201/sns-alert-service/internal/aws"
+	"github.com/maks3201/sns-alert-service/internal/health"
+	"github.com/maks3201/sns-alert-service/internal/ready"
+	log "github.com/sirupsen/logrus"
 )
 
-
 func main() {
-    // Load configuration and environment variables
-    cfg := config.LoadConfig()
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetLevel(log.InfoLevel)
 
-    // Initialize AWS SNS client
-    if err := aws.InitSNSClient(cfg); err != nil {
-        log.Fatalf("Failed to initialize AWS client: %v", err)
-    }
+	cfg := config.LoadConfig()
 
-    // Define HTTP route and handler
-    http.HandleFunc("/healthz", health.HealthHandler) 
-    http.HandleFunc("/alert", alertmanager.SNSHandler)
+	if err := aws.InitSNSClient(cfg); err != nil {
+		log.Fatalf("Failed to initialize AWS client: %v", err)
+	}
 
-    // Start HTTP server
-    log.Printf("Server started on port 80")
-    if err := http.ListenAndServe(":80", nil); err != nil {
-        log.Fatalf("Server failed to start: %v", err)
-    }
+	http.HandleFunc("/healthz", health.HealthHandler)
+	http.HandleFunc("/alert", alertmanager.SNSHandler)
+	http.HandleFunc("/ready", ready.ReadyHandler)
+
+	server := &http.Server{Addr: ":80"}
+
+	go func() {
+		log.Infof("Server started on %s", server.Addr)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server failed to start: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Info("Shutting down server...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+
+	log.Info("Server exiting")
 }
