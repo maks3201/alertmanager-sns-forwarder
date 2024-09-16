@@ -35,8 +35,13 @@ type Alert struct {
 	GeneratorURL string            `json:"generatorURL"`
 }
 
+var cfg config.Config
+
+func InitAlertManager(c config.Config) {
+	cfg = c
+}
+
 func SNSHandler(w http.ResponseWriter, r *http.Request) {
-	cfg := config.LoadConfig()
 
 	log.Infof("Loaded global alertnames: %v", cfg.AlertNames)
 
