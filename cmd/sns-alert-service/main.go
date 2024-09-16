@@ -21,7 +21,8 @@ func main() {
 	log.SetLevel(log.InfoLevel)
 
 	cfg := config.LoadConfig()
-
+	alertmanager.InitAlertManager(cfg)
+	log.Infof("Loaded configuration: %+v", cfg)
 	if err := aws.InitSNSClient(cfg); err != nil {
 		log.Fatalf("Failed to initialize AWS client: %v", err)
 	}
