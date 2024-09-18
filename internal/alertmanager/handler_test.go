@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// Mock AWS Client
 type MockAWSClient struct {
 	mock.Mock
 }
@@ -46,7 +45,6 @@ func TestSNSHandler(t *testing.T) {
 
 	handler := NewHandler(cfg, mockAWSClient)
 
-	// Создаем тестовый HTTP запрос
 	alertJSON := `{
         "alerts": [
             {
@@ -82,21 +80,18 @@ func TestIsAlertFiltered(t *testing.T) {
 	allowedAlerts := []string{"Alert1", "Alert2"}
 	assert.True(t, isAlertFiltered("Alert1", allowedAlerts))
 	assert.False(t, isAlertFiltered("Alert3", allowedAlerts))
-	assert.True(t, isAlertFiltered("AnyAlert", []string{})) // Пустой список разрешает все алерты
+	assert.True(t, isAlertFiltered("AnyAlert", []string{}))
 }
 
 func TestIsTopicAvailable(t *testing.T) {
-	// Тестируем внутри интервала
 	startTime, _ := parseTime("15:04", "08:00")
 	endTime, _ := parseTime("15:04", "18:00")
 	currentTime, _ := parseTime("15:04", "12:00")
 	assert.True(t, isTopicAvailable(startTime, endTime, currentTime))
 
-	// Тестируем за пределами интервала
 	currentTime, _ = parseTime("15:04", "20:00")
 	assert.False(t, isTopicAvailable(startTime, endTime, currentTime))
 
-	// Тестируем интервал через полночь
 	startTime, _ = parseTime("15:04", "22:00")
 	endTime, _ = parseTime("15:04", "06:00")
 	currentTime, _ = parseTime("15:04", "23:00")

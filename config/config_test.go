@@ -8,7 +8,6 @@ import (
 )
 
 func TestLoadConfig(t *testing.T) {
-	// Создаем временный конфигурационный файл
 	configContent := `
 aws_region: "eu-central-1"
 sns_topics:
@@ -19,10 +18,10 @@ sns_topics:
 alertnames:
   - "TestAlert"
 `
-	os.WriteFile("config_test.yaml", []byte(configContent), 0644)
+	err := os.WriteFile("config_test.yaml", []byte(configContent), 0644)
+	assert.NoError(t, err)
 	defer os.Remove("config_test.yaml")
 
-	// Переопределяем путь к конфигурации для теста
 	originalReadFile := readFile
 	readFile = func(filename string) ([]byte, error) {
 		return os.ReadFile("config_test.yaml")

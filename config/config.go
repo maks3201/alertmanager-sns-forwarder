@@ -7,8 +7,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var readFile = os.ReadFile
-
 type SNSTopicConfig struct {
 	Name      string `yaml:"name"`
 	ARN       string `yaml:"arn"`
@@ -21,6 +19,8 @@ type Config struct {
 	Topics     []SNSTopicConfig `yaml:"sns_topics"`
 	AlertNames []string         `yaml:"alertnames"`
 }
+
+var readFile = os.ReadFile
 
 func LoadConfig() Config {
 	file, err := readFile("config/config.yaml")

@@ -37,10 +37,10 @@ type Alert struct {
 
 type Handler struct {
 	cfg       config.Config
-	awsClient *aws.Client
+	awsClient aws.SNSClient
 }
 
-func NewHandler(cfg config.Config, awsClient *aws.Client) *Handler {
+func NewHandler(cfg config.Config, awsClient aws.SNSClient) *Handler {
 	return &Handler{
 		cfg:       cfg,
 		awsClient: awsClient,
@@ -122,7 +122,6 @@ func isTopicAvailable(startTime, endTime, currentTime time.Time) bool {
 	if startTime.Before(endTime) {
 		return currentTime.After(startTime) && currentTime.Before(endTime)
 	}
-	// Интервал через полночь
 	return currentTime.After(startTime) || currentTime.Before(endTime)
 }
 

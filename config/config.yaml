@@ -1,7 +1,7 @@
 aws_region: "eu-central-1"
 sns_topics:
   - name: "mryzhukhin-alerts"
-    arn: "arn:aws:sns:eu-central-1:517455315985:mryzhukhin-alerts"
+    arn: "arn:aws:sns:eu-central-1::mryzhukhin-alerts"
     start_time: "00:00"
     end_time: "23:59"
 alertnames:

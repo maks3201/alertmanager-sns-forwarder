@@ -14,8 +14,19 @@ import (
 	"github.com/maks3201/sns-alert-service/config"
 )
 
+type SNSAPI interface {
+	ListTopics(ctx context.Context, params *sns.ListTopicsInput, optFns ...func(*sns.Options)) (*sns.ListTopicsOutput, error)
+	GetTopicAttributes(ctx context.Context, params *sns.GetTopicAttributesInput, optFns ...func(*sns.Options)) (*sns.GetTopicAttributesOutput, error)
+	Publish(ctx context.Context, params *sns.PublishInput, optFns ...func(*sns.Options)) (*sns.PublishOutput, error)
+}
+
+type SNSClient interface {
+	PublishToSNS(ctx context.Context, topicArn string, message string) error
+	CheckSNSConnection(ctx context.Context) error
+}
+
 type Client struct {
-	snsClient *sns.Client
+	snsClient SNSAPI
 }
 
 func InitSNSClient(cfg config.Config) (*Client, error) {
