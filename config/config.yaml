@@ -1,13 +1,9 @@
-aws_region: "us-east-1"
+aws_region: "eu-central-1"
 sns_topics:
-  - name: "TopicA"
-    arn: "arn:aws:sns:us-east-1:123456789012:TopicA"
+  - name: "mryzhukhin-alerts"
+    arn: "arn:aws:sns:eu-central-1:517455315985:mryzhukhin-alerts"
     start_time: "00:00"
     end_time: "23:59"
-  - name: "TopicB"
-    arn: "arn:aws:sns:us-east-1:123456789012:TopicB"
-    start_time: "02:00"
-    end_time: "10:00"
 alertnames:
   - "AlertName"
   - "TestAlert"

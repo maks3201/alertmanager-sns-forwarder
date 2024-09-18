@@ -7,8 +7,18 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func ReadyHandler(w http.ResponseWriter, r *http.Request) {
-	if err := aws.CheckSNSConnection(); err != nil {
+type Handler struct {
+	awsClient *aws.Client
+}
+
+func NewHandler(awsClient *aws.Client) *Handler {
+	return &Handler{
+		awsClient: awsClient,
+	}
+}
+
+func (h *Handler) ReadyHandler(w http.ResponseWriter, r *http.Request) {
+	if err := h.awsClient.CheckSNSConnection(r.Context()); err != nil {
 		log.Errorf("AWS SNS connection check failed: %v", err)
 		http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
 		return

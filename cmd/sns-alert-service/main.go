@@ -21,15 +21,18 @@ func main() {
 	log.SetLevel(log.InfoLevel)
 
 	cfg := config.LoadConfig()
-	alertmanager.InitAlertManager(cfg)
-	log.Infof("Loaded configuration: %+v", cfg)
-	if err := aws.InitSNSClient(cfg); err != nil {
+
+	awsClient, err := aws.InitSNSClient(cfg)
+	if err != nil {
 		log.Fatalf("Failed to initialize AWS client: %v", err)
 	}
 
+	alertHandler := alertmanager.NewHandler(cfg, awsClient)
+	readyHandler := ready.NewHandler(awsClient)
+
 	http.HandleFunc("/healthz", health.HealthHandler)
-	http.HandleFunc("/alert", alertmanager.SNSHandler)
-	http.HandleFunc("/ready", ready.ReadyHandler)
+	http.HandleFunc("/alert", alertHandler.SNSHandler)
+	http.HandleFunc("/ready", readyHandler.ReadyHandler)
 
 	server := &http.Server{Addr: ":80"}
 

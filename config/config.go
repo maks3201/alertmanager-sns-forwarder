@@ -2,11 +2,12 @@ package config
 
 import (
 	"os"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
+
+var readFile = os.ReadFile
 
 type SNSTopicConfig struct {
 	Name      string `yaml:"name"`
@@ -22,7 +23,7 @@ type Config struct {
 }
 
 func LoadConfig() Config {
-	file, err := os.ReadFile("config/config.yaml")
+	file, err := readFile("config/config.yaml")
 	if err != nil {
 		log.Fatalf("Failed to read config file: %v", err)
 	}
@@ -38,12 +39,4 @@ func LoadConfig() Config {
 	}
 
 	return cfg
-}
-
-func ParseTime(layout, timeStr string) time.Time {
-	parsedTime, err := time.Parse(layout, timeStr)
-	if err != nil {
-		log.Fatalf("Error parsing time: %v", err)
-	}
-	return parsedTime
 }

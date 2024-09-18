@@ -35,30 +35,48 @@ type Alert struct {
 	GeneratorURL string            `json:"generatorURL"`
 }
 
-var cfg config.Config
-
-func InitAlertManager(c config.Config) {
-	cfg = c
+type Handler struct {
+	cfg       config.Config
+	awsClient *aws.Client
 }
 
-func SNSHandler(w http.ResponseWriter, r *http.Request) {
+func NewHandler(cfg config.Config, awsClient *aws.Client) *Handler {
+	return &Handler{
+		cfg:       cfg,
+		awsClient: awsClient,
+	}
+}
 
-	log.Infof("Loaded global alertnames: %v", cfg.AlertNames)
+func (h *Handler) SNSHandler(w http.ResponseWriter, r *http.Request) {
+
+	log.Infof("Loaded global alertnames: %v", h.cfg.AlertNames)
 
 	currentTime := time.Now().Format("15:04")
 
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
-		log.Fatalf("Error reading request body: %v", err)
+		log.Errorf("Error reading request body: %v", err)
 		return
 	}
 	defer r.Body.Close()
 
-	for _, topic := range cfg.Topics {
-		startTime := config.ParseTime("15:04", topic.StartTime)
-		endTime := config.ParseTime("15:04", topic.EndTime)
-		currentTimeParsed := config.ParseTime("15:04", currentTime)
+	for _, topic := range h.cfg.Topics {
+		startTime, err := parseTime("15:04", topic.StartTime)
+		if err != nil {
+			log.Errorf("Error parsing start time: %v", err)
+			continue
+		}
+		endTime, err := parseTime("15:04", topic.EndTime)
+		if err != nil {
+			log.Errorf("Error parsing end time: %v", err)
+			continue
+		}
+		currentTimeParsed, err := parseTime("15:04", currentTime)
+		if err != nil {
+			log.Errorf("Error parsing current time: %v", err)
+			continue
+		}
 
 		if isTopicAvailable(startTime, endTime, currentTimeParsed) {
 			log.Infof("Topic %s is available. Sending alert to ARN: %s", topic.Name, topic.ARN)
@@ -68,21 +86,21 @@ func SNSHandler(w http.ResponseWriter, r *http.Request) {
 			var payload AlertmanagerPayload
 			if err := json.NewDecoder(bodyReader).Decode(&payload); err != nil {
 				http.Error(w, "Failed to parse request body", http.StatusBadRequest)
-				log.Fatalf("Error parsing request: %v", err)
+				log.Errorf("Error parsing request: %v", err)
 				return
 			}
 
 			for _, alert := range payload.Alerts {
 				alertname := alert.Labels["alertname"]
 				log.Infof("Received alertname: %s", alertname)
-				log.Infof("Allowed alertnames: %v", cfg.AlertNames)
+				log.Infof("Allowed alertnames: %v", h.cfg.AlertNames)
 
-				if isAlertFiltered(alertname, cfg.AlertNames) {
+				if isAlertFiltered(alertname, h.cfg.AlertNames) {
 					log.Infof("Alertname %s is allowed", alertname)
 					message := formatAlertMessage(payload)
 
-					if err := aws.PublishToSNS(topic.ARN, message); err != nil {
-						log.Fatalf("Error sending message to SNS: %v", err)
+					if err := h.awsClient.PublishToSNS(r.Context(), topic.ARN, message); err != nil {
+						log.Errorf("Error sending message to SNS: %v", err)
 						http.Error(w, fmt.Sprintf("Failed to send message to SNS: %v", err), http.StatusInternalServerError)
 						continue
 					}
@@ -104,6 +122,7 @@ func isTopicAvailable(startTime, endTime, currentTime time.Time) bool {
 	if startTime.Before(endTime) {
 		return currentTime.After(startTime) && currentTime.Before(endTime)
 	}
+	// Интервал через полночь
 	return currentTime.After(startTime) || currentTime.Before(endTime)
 }
 
@@ -140,4 +159,12 @@ func isAlertFiltered(alertname string, allowedAlertNames []string) bool {
 		}
 	}
 	return false
+}
+
+func parseTime(layout, timeStr string) (time.Time, error) {
+	parsedTime, err := time.Parse(layout, timeStr)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("error parsing time: %v", err)
+	}
+	return parsedTime, nil
 }

@@ -14,32 +14,34 @@ import (
 	"github.com/maks3201/sns-alert-service/config"
 )
 
-var snsClient *sns.Client
-
-// InitSNSClient initializes the AWS SNS client and verifies credentials
-func InitSNSClient(cfg config.Config) error {
-	awsCfg, err := awsconfig.LoadDefaultConfig(context.TODO(), awsconfig.WithRegion(cfg.AWSRegion))
-	if err != nil {
-		return fmt.Errorf("failed to load AWS configuration: %v", err)
-	}
-
-	snsClient = sns.NewFromConfig(awsCfg)
-
-	if err := verifySNSClient(cfg.AWSRegion); err != nil {
-		return fmt.Errorf("failed to verify SNS client: %v", err)
-	}
-
-	if err := CheckSNSTopicsExistence(cfg); err != nil {
-		return fmt.Errorf("SNS topics verification failed: %v", err)
-	}
-
-	return nil
+type Client struct {
+	snsClient *sns.Client
 }
 
-// verifySNSClient checks if the SNS client is working by listing topics
-func verifySNSClient(region string) error {
+func InitSNSClient(cfg config.Config) (*Client, error) {
+	awsCfg, err := awsconfig.LoadDefaultConfig(context.TODO(), awsconfig.WithRegion(cfg.AWSRegion))
+	if err != nil {
+		return nil, fmt.Errorf("failed to load AWS configuration: %v", err)
+	}
+
+	client := &Client{
+		snsClient: sns.NewFromConfig(awsCfg),
+	}
+
+	if err := client.verifySNSClient(cfg.AWSRegion); err != nil {
+		return nil, fmt.Errorf("failed to verify SNS client: %v", err)
+	}
+
+	if err := client.CheckSNSTopicsExistence(cfg); err != nil {
+		return nil, fmt.Errorf("SNS topics verification failed: %v", err)
+	}
+
+	return client, nil
+}
+
+func (c *Client) verifySNSClient(region string) error {
 	input := &sns.ListTopicsInput{}
-	_, err := snsClient.ListTopics(context.TODO(), input)
+	_, err := c.snsClient.ListTopics(context.TODO(), input)
 	if err != nil {
 		return fmt.Errorf("error verifying SNS client: %v", err)
 	}
@@ -47,10 +49,9 @@ func verifySNSClient(region string) error {
 	return nil
 }
 
-// CheckSNSTopicsExistence checks if all configured SNS topics exist
-func CheckSNSTopicsExistence(cfg config.Config) error {
+func (c *Client) CheckSNSTopicsExistence(cfg config.Config) error {
 	for _, topic := range cfg.Topics {
-		exists, err := TopicExists(topic.ARN)
+		exists, err := c.TopicExists(topic.ARN)
 		if err != nil {
 			return fmt.Errorf("error checking topic %s: %v", topic.Name, err)
 		}
@@ -62,17 +63,15 @@ func CheckSNSTopicsExistence(cfg config.Config) error {
 	return nil
 }
 
-// TopicExists checks if a topic exists by its ARN
-func TopicExists(topicArn string) (bool, error) {
+func (c *Client) TopicExists(topicArn string) (bool, error) {
 	input := &sns.GetTopicAttributesInput{
 		TopicArn: aws.String(topicArn),
 	}
-	_, err := snsClient.GetTopicAttributes(context.TODO(), input)
+	_, err := c.snsClient.GetTopicAttributes(context.TODO(), input)
 	if err != nil {
 		var apiErr smithy.APIError
 		if errors.As(err, &apiErr) {
 			if apiErr.ErrorCode() == "NotFound" || apiErr.ErrorCode() == "InvalidParameter" {
-				// Топик не найден или ARN некорректен
 				return false, nil
 			}
 		}
@@ -81,9 +80,8 @@ func TopicExists(topicArn string) (bool, error) {
 	return true, nil
 }
 
-// PublishToSNS publishes a message to an SNS topic
-func PublishToSNS(topicArn string, message string) error {
-	_, err := snsClient.Publish(context.TODO(), &sns.PublishInput{
+func (c *Client) PublishToSNS(ctx context.Context, topicArn string, message string) error {
+	_, err := c.snsClient.Publish(ctx, &sns.PublishInput{
 		TopicArn: &topicArn,
 		Message:  &message,
 	})
@@ -93,18 +91,9 @@ func PublishToSNS(topicArn string, message string) error {
 	return nil
 }
 
-func CheckSNSConnection() error {
+func (c *Client) CheckSNSConnection(ctx context.Context) error {
 	input := &sns.ListTopicsInput{}
-	_, err := snsClient.ListTopics(context.TODO(), input)
-	if err != nil {
-		return fmt.Errorf("error checking SNS connection: %v", err)
-	}
-	return nil
-}
-
-func SimpleSNSConnectionCheck() error {
-	input := &sns.ListTopicsInput{}
-	_, err := snsClient.ListTopics(context.TODO(), input)
+	_, err := c.snsClient.ListTopics(ctx, input)
 	if err != nil {
 		return fmt.Errorf("error checking SNS connection: %v", err)
 	}
