@@ -34,3 +34,8 @@ docker run -e AWS_ACCESS_KEY_ID=your_access_key \
 curl -X POST 127.1:8080/alert      -H "Content-Type: application/json" \
      -d @tests/alert.json
 ```
+
+### Golang Tests
+```
+go test ./... -cover
+```
