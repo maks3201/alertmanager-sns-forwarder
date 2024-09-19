@@ -15,9 +15,10 @@ type SNSTopicConfig struct {
 }
 
 type Config struct {
-	AWSRegion  string           `yaml:"aws_region"`
-	Topics     []SNSTopicConfig `yaml:"sns_topics"`
-	AlertNames []string         `yaml:"alertnames"`
+	AWSRegion        string           `yaml:"aws_region"`
+	Topics           []SNSTopicConfig `yaml:"sns_topics"`
+	AlertNames       []string         `yaml:"alertnames"`
+	BatchWaitSeconds int              `yaml:"batch_wait_seconds"`
 }
 
 var readFile = os.ReadFile
@@ -34,8 +35,13 @@ func LoadConfig() Config {
 		log.Fatalf("Failed to parse config file: %v", err)
 	}
 
+	// Validate required fields
 	if cfg.AWSRegion == "" || len(cfg.Topics) == 0 {
 		log.Fatal("Missing required fields in config file")
+	}
+
+	if cfg.BatchWaitSeconds <= 0 {
+		log.Fatal("batch_wait_seconds must be a positive integer")
 	}
 
 	return cfg

@@ -93,8 +93,8 @@ func (c *Client) TopicExists(topicArn string) (bool, error) {
 
 func (c *Client) PublishToSNS(ctx context.Context, topicArn string, message string) error {
 	_, err := c.snsClient.Publish(ctx, &sns.PublishInput{
-		TopicArn: &topicArn,
-		Message:  &message,
+		TopicArn: aws.String(topicArn),
+		Message:  aws.String(message),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to publish message to SNS: %v", err)
