@@ -1,0 +1,24 @@
+{{- if .Values.prometheus.monitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "alertmanager-sns-forwarder.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alertmanager-sns-forwarder.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "alertmanager-sns-forwarder.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: http
+      interval: 30s
+    {{- with .Values.prometheus.monitor.metricRelabelings }}
+      metricRelabelings:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
+{{- end }}

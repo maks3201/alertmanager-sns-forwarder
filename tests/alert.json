@@ -1,0 +1,35 @@
+{
+  "receiver": "webhook",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "TestAlert",
+        "instance": "localhost:9090",
+        "job": "prometheus",
+        "severity": "critical"
+      },
+      "annotations": {
+        "summary": "Instance is down",
+        "description": "The instance is not responding"
+      },
+      "startsAt": "2024-09-05T12:00:00Z",
+      "endsAt": "2024-09-05T12:30:00Z",
+      "generatorURL": "http://prometheus.local:9090/graph?..."
+    }
+  ],
+  "groupLabels": {
+    "alertname": "TestAlert"
+  },
+  "commonLabels": {
+    "alertname": "TestAlert",
+    "severity": "critical"
+  },
+  "commonAnnotations": {
+    "summary": "Instance is down"
+  },
+  "externalURL": "http://alertmanager.local:9093",
+  "version": "4",
+  "groupKey": "{}:{alertname=\"TestAlert\", job=\"prometheus\"}"
+}

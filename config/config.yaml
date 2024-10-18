@@ -1,0 +1,39 @@
+# EXAMPLE
+---
+aws_region: "eu-central-1"
+
+sns_topics:  # List of SNS topics to send alerts to
+  - name: "-alerts"  # Name of the SNS topic
+    arn: "arn:aws:sns:eu-central-1::-alerts"  # Amazon Resource Name (ARN) of the SNS topic
+    start_time: "00:00"        # Start time (24-hour format) when alerts can be sent to this topic
+    end_time: "23:59"          # End time (24-hour format) when alerts stop being sent to this topic
+    days_of_week:              # Days of week when alerts can be sent to this topic
+      - "Monday"
+      - "Tuesday"
+      - "Wednesday"
+      - "Thursday"
+      - "Friday"
+
+alertnames:  # List of alert names that are allowed to be processed and sent
+  - "AlertName"
+  - "TestAlert"
+
+log_level: debug
+
+batch_wait_seconds: 3  # Duration to collect alerts before sending them as a single message to SNS
+
+# Timeout configurations for HTTP clients and servers
+timeouts:
+  server:
+    read_timeout_seconds: 5          # Maximum duration for reading the entire request, including the body
+    write_timeout_seconds: 5         # Maximum duration before timing out writes of the response
+    idle_timeout_seconds: 60          # Maximum amount of time to wait for the next request when keep-alives are enabled
+    read_header_timeout_seconds: 1    # Amount of time allowed to read request headers
+  aws:
+    dial_timeout_seconds: 5           # Maximum time to establish a connection to AWS services
+    tls_handshake_timeout_seconds: 5  # Maximum time for the TLS handshake
+    response_header_timeout_seconds: 10  # Maximum time to wait for a server's response headers
+    expect_continue_timeout_seconds: 1   # Maximum time to wait for a server's first response headers after sending the request headers
+    idle_conn_timeout_seconds: 90        # Maximum amount of time an idle (keep-alive) connection will remain idle before closing itself
+    max_idle_conns: 100                  # Maximum number of idle (keep-alive) connections across all hosts
+    api_call_timeout_seconds: 10         # Overall timeout for AWS API calls
