@@ -24,3 +24,4 @@ jobs:
           push: true
           tags: maks3201/alertmanager-sns-forwarder:${{ github.ref_name }}-${{ github.run_number }}
  
+ 
