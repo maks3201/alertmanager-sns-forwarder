@@ -8,7 +8,7 @@ image:
   repository: "maks3201/devops-alertmanager-sns-forwarder"
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: changeme
+  tag: v0.0.1
 
 nameOverride: ""
 fullnameOverride: ""
@@ -66,18 +66,14 @@ readinessProbe: []
 
 config: |
   # EXAMPLE
-  alertnames:
-    - "OOMKilling[5m]"
-    - "Pod Memory Pressure Alert"
-    - "Pod Restart Error Alert [5m]"
-    - "Pod Memory Instant Pressure Alert"
+  alertnames: []
 
   batch_wait_seconds: 3
 
   aws_region: "eu-central-1"
   sns_topics:
-    - name: "mryzhukhin-alerts"
-      arn: "arn:aws:sns:eu-central-1::mryzhukhin-alerts"
+    - name: "-alerts"
+      arn: "arn:aws:sns:eu-central-1::-alerts"
       start_time: "00:00"
       end_time: "23:59"
 

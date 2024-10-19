@@ -3,22 +3,12 @@ entries:
   alertmanager-sns-forwarder:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-10-19T20:09:10.681881+02:00"
+    created: "2024-10-19T23:46:19.269664+02:00"
     description: A Helm chart for alertmanager-sns-forwarder
-    digest: fe8b5bfe5bef3fa876f004c31af778a3b4b9fb414943e8501e521f63e49defa2
-    name: alertmanager-sns-forwarder
-    type: application
-    urls:
-    - https://maks3201.github.io/alertmanager-sns-forwarder/Charts/alertmanager-sns-forwarder-0.0.2.tgz
-    version: 0.0.2
-  - apiVersion: v2
-    appVersion: 0.0.1
-    created: "2024-10-19T20:09:10.681582+02:00"
-    description: A Helm chart for alertmanager-sns-forwarder
-    digest: 559fa36a3131933427e4725ed6885ebbf3e1d4d5bd96a7d9f74d4cc1fc70c922
+    digest: 6ad5ce1f34a5e73e0f2a4fb228317ad5cc162d274f66ce558bc65eb9c344a00c
     name: alertmanager-sns-forwarder
     type: application
     urls:
     - https://maks3201.github.io/alertmanager-sns-forwarder/Charts/alertmanager-sns-forwarder-0.0.1.tgz
     version: 0.0.1
-generated: "2024-10-19T20:09:10.680185+02:00"
+generated: "2024-10-19T23:46:19.268631+02:00"
