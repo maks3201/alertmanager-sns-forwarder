@@ -18,6 +18,7 @@ spec:
       labels:
         {{- include "alertmanager-sns-forwarder.selectorLabels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "alertmanager-sns-forwarder.serviceAccountName" . }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -81,17 +82,4 @@ spec:
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- if .Values.nodeLocalDns.enabled }}
-      dnsPolicy: "None"
-      dnsConfig:
-        nameservers:
-          - {{ .Values.nodeLocalDns.address }}
-        searches:
-          - {{ .Release.Namespace }}.svc.cluster.local
-          - svc.cluster.local
-          - cluster.local
-        options:
-          - name: ndots
-            value: "5"
       {{- end }}

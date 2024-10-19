@@ -89,17 +89,17 @@ affinity: {}
 
 args: []
 
-env:
-  - name: AWS_ACCESS_KEY_ID
-    valueFrom:
-      secretKeyRef:
-        name: alertmanager-sns-forwarder-secret-NAME
-        key: aws_access_key_id-ID
-  - name: AWS_SECRET_ACCESS_KEY
-    valueFrom:
-      secretKeyRef:
-        name: alertmanager-sns-forwarder-secret-NAME
-        key: aws_secret_access_key-KEY
+# env:
+#   - name: AWS_ACCESS_KEY_ID
+#     valueFrom:
+#       secretKeyRef:
+#         name: alertmanager-sns-forwarder-secret-NAME
+#         key: aws_access_key_id-ID
+#   - name: AWS_SECRET_ACCESS_KEY
+#     valueFrom:
+#       secretKeyRef:
+#         name: alertmanager-sns-forwarder-secret-NAME
+#         key: aws_secret_access_key-KEY
 
 prometheus:
   monitor:
