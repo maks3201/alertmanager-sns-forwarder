@@ -5,7 +5,7 @@ replicaCount: 1
 strategyType: Recreate
 
 image:
-  repository: "maks3201/devops-alertmanager-sns-forwarder"
+  repository: "maks3201/alertmanager-sns-forwarder"
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: v0.0.2
