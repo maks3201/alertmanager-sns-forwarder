@@ -8,7 +8,7 @@ image:
   repository: "maks3201/devops-alertmanager-sns-forwarder"
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: v0.0.1
+  tag: v0.0.2
 
 nameOverride: ""
 fullnameOverride: ""
