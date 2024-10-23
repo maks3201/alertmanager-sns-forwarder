@@ -187,6 +187,8 @@ func groupAlertsByAlertname(alerts []Alert) map[string][]Alert {
 func formatGroupedAlertMessage(alertname string, alerts []Alert) string {
 	var message strings.Builder
 
+	fmt.Fprintf(&message, "Alertname: %s\n", alertname)
+
 	for _, alert := range alerts {
 		summary := alert.Annotations["summary"]
 		if summary != "" {

@@ -17,21 +17,41 @@
 The service is configured via a `config.yaml` file. Example:
 
 ```yaml
-aws_region: "eu-central-1"
-sns_topics:
-  - name: "alerts-topic"
-    arn: "arn:aws:sns:eu-central-1:xxxxxxx:alerts-topic"
-    start_time: "00:00"
-    end_time: "23:59"
-alertnames:
+aws_region: "eu-central-1"            # AWS region where SNS topics are hosted
+
+sns_topics:                           # List of SNS topics to send alerts to
+  - name: "alerts-topic"              # Name of the SNS topic
+    arn: "arn:aws:sns:eu-central-1:xxxxxxx:alerts-topic"  # Amazon Resource Name (ARN) of the SNS topic
+    start_time: "00:00"               # Start time (24-hour format) when alerts can be sent to this topic
+    end_time: "23:59"                 # End time (24-hour format) when alerts stop being sent to this topic
+    days_of_week:                     # Days of the week when the topic is available for sending alerts
+      - "Monday"
+      - "Tuesday"
+      - "Wednesday"
+      - "Thursday"
+      - "Friday"
+
+alertnames:                           # List of alert names that are allowed to be processed and sent
   - "CriticalAlert"
-batch_wait_seconds: 3
-timeouts:
+  - "HighPriorityAlert"
+
+batch_wait_seconds: 3                 # Duration to wait before batching and sending alerts to SNS (in seconds)
+
+timeouts:                             # Timeout configurations for the HTTP server and AWS API calls
   server:
-    read_timeout_seconds: 5
-    write_timeout_seconds: 5
+    read_timeout_seconds: 5           # Maximum duration for reading the entire request (including the body)
+    write_timeout_seconds: 5          # Maximum duration before timing out writes of the response
+    idle_timeout_seconds: 60          # Maximum amount of time to wait for the next request when keep-alives are enabled
+    read_header_timeout_seconds: 1    # Amount of time allowed to read request headers
   aws:
-    api_call_timeout_seconds: 10
+    dial_timeout_seconds: 5           # Maximum time to establish a connection to AWS services
+    tls_handshake_timeout_seconds: 5  # Maximum time for the TLS handshake
+    response_header_timeout_seconds: 10  # Maximum time to wait for a server's response headers
+    expect_continue_timeout_seconds: 1   # Maximum time to wait for a server's first response headers after sending the request headers
+    idle_conn_timeout_seconds: 90     # Maximum amount of time an idle (keep-alive) connection will remain idle before closing
+    max_idle_conns: 100               # Maximum number of idle (keep-alive) connections across all hosts
+    api_call_timeout_seconds: 10      # Overall timeout for AWS API calls
+
 ```
 
 ## Environment Variables
@@ -53,6 +73,7 @@ Metrics exposed by the service:
 - `alerts_filtered_total`: Alerts filtered out.
 - `alerts_sent_total`: Alerts sent to SNS.
 - `sns_send_duration_seconds`: Time taken to send alerts to SNS.
+- `sns_alerts_failed_total`: Total number of alerts that failed to be sent to AWS SNS.
 
 ## Build and Deployment
 
